@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { generateAssistantReply } from "../server/aiAssistant";
+import { generateAssistantReply } from "../server/aiAssistant.js";
 
 async function readJsonBody(req: IncomingMessage): Promise<unknown> {
   const chunks: Buffer[] = [];
