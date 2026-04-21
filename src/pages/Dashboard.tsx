@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, LogOut } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { translations, t } from "@/i18n/translations";
@@ -136,8 +137,32 @@ const Dashboard = () => {
                     }`}
                   >
                     {msg.role === "assistant" ? (
-                      <div className="prose prose-sm max-w-none text-secondary-foreground prose-headings:text-secondary-foreground prose-strong:text-secondary-foreground prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0 prose-code:text-secondary-foreground prose-pre:bg-background/30 prose-pre:text-secondary-foreground">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                      <div className="max-w-none text-[15px] leading-7 text-secondary-foreground">
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm, remarkBreaks]}
+                          components={{
+                            h1: ({ children }) => <h1 className="mt-4 mb-3 text-2xl font-bold leading-tight">{children}</h1>,
+                            h2: ({ children }) => <h2 className="mt-4 mb-3 text-xl font-semibold leading-tight">{children}</h2>,
+                            h3: ({ children }) => <h3 className="mt-3 mb-2 text-lg font-semibold">{children}</h3>,
+                            h4: ({ children }) => <h4 className="mt-3 mb-2 text-base font-semibold">{children}</h4>,
+                            p: ({ children }) => <p className="my-3 whitespace-pre-wrap">{children}</p>,
+                            ul: ({ children }) => <ul className="my-3 list-disc pl-6 space-y-1">{children}</ul>,
+                            ol: ({ children }) => <ol className="my-3 list-decimal pl-6 space-y-1">{children}</ol>,
+                            li: ({ children }) => <li className="pl-1">{children}</li>,
+                            strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                            blockquote: ({ children }) => (
+                              <blockquote className="my-3 border-l-2 border-border/80 pl-3 italic">{children}</blockquote>
+                            ),
+                            code: ({ className, children }) =>
+                              className ? (
+                                <code className="block rounded-md bg-background/40 p-3 text-[0.9em] leading-6">{children}</code>
+                              ) : (
+                                <code className="rounded bg-background/40 px-1 py-0.5 text-[0.92em]">{children}</code>
+                              ),
+                          }}
+                        >
+                          {msg.content}
+                        </ReactMarkdown>
                       </div>
                     ) : (
                       <div className="whitespace-pre-wrap">{msg.content}</div>
