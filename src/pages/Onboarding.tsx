@@ -8,6 +8,7 @@ import { ArrowRight, ArrowLeft } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { translations, t } from "@/i18n/translations";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { buildProfileFromAnswers, saveOnboardingProfile } from "@/lib/onboardingProfile";
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -27,6 +28,8 @@ const Onboarding = () => {
 
   const handleNext = () => {
     if (isLast) {
+      const profile = buildProfileFromAnswers(answers, lang);
+      saveOnboardingProfile(profile);
       navigate("/dashboard");
     } else {
       setCurrentStep(currentStep + 1);

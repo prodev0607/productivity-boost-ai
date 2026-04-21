@@ -6,6 +6,7 @@ import { Send, LogOut } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { translations, t } from "@/i18n/translations";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { getOnboardingProfile } from "@/lib/onboardingProfile";
 
 interface Message {
   role: "user" | "assistant";
@@ -16,6 +17,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const messagesEnd = useRef<HTMLDivElement>(null);
   const { lang } = useLanguage();
   const tx = translations.dashboard;
@@ -24,18 +26,62 @@ const Dashboard = () => {
     messagesEnd.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = (text?: string) => {
+  const handleSend = async (text?: string) => {
     const msg = text || input;
-    if (!msg.trim()) return;
+    if (!msg.trim() || isLoading) return;
     const userMsg: Message = { role: "user", content: msg };
-    const botMsg: Message = { role: "assistant", content: t(tx.response, lang) };
-    setMessages((prev) => [...prev, userMsg, botMsg]);
+    const history = messages.slice(-6);
+    setMessages((prev) => [...prev, userMsg]);
     setInput("");
+
+    try {
+      setIsLoading(true);
+      const profile = getOnboardingProfile();
+
+      const response = await fetch("/api/ai-assistant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: msg,
+          profile: profile || {
+            userRole: "professional",
+            goals: "save time and be more organized",
+            painPoints: "daily planning and prioritization",
+            userName: lang === "fr" ? "Utilisateur" : "User",
+            language: lang,
+          },
+          history,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorPayload = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(errorPayload.error || "AI request failed");
+      }
+
+      const data = (await response.json()) as { reply?: string };
+      const content = data.reply?.trim() || t(tx.response, lang);
+      setMessages((prev) => [...prev, { role: "assistant", content }]);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content:
+            lang === "fr"
+              ? `Je n'ai pas pu generer une reponse pour le moment. ${message || "Reessayez dans quelques secondes."}`
+              : `I couldn't generate a response right now. ${message || "Please try again in a few seconds."}`,
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    handleSend();
+    void handleSend();
   };
 
   return (
@@ -67,7 +113,8 @@ const Dashboard = () => {
                 {tx.quickActions.map((action, i) => (
                   <button
                     key={i}
-                    onClick={() => handleSend(t(action, lang))}
+                    onClick={() => void handleSend(t(action, lang))}
+                    disabled={isLoading}
                     className="text-left p-4 rounded-lg border border-border bg-card hover:border-primary/40 transition-colors text-sm text-foreground"
                   >
                     {t(action, lang)}
@@ -80,7 +127,7 @@ const Dashboard = () => {
               {messages.map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                   <div
-                    className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
+                    className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm whitespace-pre-wrap ${
                       msg.role === "user"
                         ? "bg-primary text-primary-foreground"
                         : "bg-secondary text-secondary-foreground"
@@ -90,6 +137,13 @@ const Dashboard = () => {
                   </div>
                 </div>
               ))}
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="max-w-[80%] rounded-2xl px-4 py-3 text-sm bg-secondary text-secondary-foreground">
+                    {lang === "fr" ? "Je prepare un plan utile..." : "Building a practical plan for you..."}
+                  </div>
+                </div>
+              )}
               <div ref={messagesEnd} />
             </div>
           )}
@@ -103,8 +157,9 @@ const Dashboard = () => {
             onChange={(e) => setInput(e.target.value)}
             placeholder={t(tx.placeholder, lang)}
             className="h-12"
+            disabled={isLoading}
           />
-          <Button type="submit" size="icon" className="h-12 w-12 shrink-0">
+          <Button type="submit" size="icon" className="h-12 w-12 shrink-0" disabled={isLoading || !input.trim()}>
             <Send className="h-4 w-4" />
           </Button>
         </form>
