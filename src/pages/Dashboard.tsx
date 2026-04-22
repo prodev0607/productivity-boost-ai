@@ -10,6 +10,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { translations, t } from "@/i18n/translations";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { getOnboardingProfile } from "@/lib/onboardingProfile";
+import { AppHeader } from "@/components/AppHeader";
 
 interface Message {
   role: "user" | "assistant";
@@ -89,20 +90,17 @@ const Dashboard = () => {
 
   return (
     <div className="h-screen flex flex-col bg-background">
-      <header className="border-b border-border bg-card/80 backdrop-blur-sm">
-        <div className="container mx-auto flex items-center justify-between h-14 px-4">
-          <span className="font-heading text-lg font-bold text-foreground">
-            B-<span className="text-primary">TECH</span>
-          </span>
-          <div className="flex items-center gap-2">
+      <AppHeader
+        rightSlot={
+          <>
             <LanguageToggle />
             <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="gap-2">
               <LogOut className="h-4 w-4" />
               {t(translations.nav.logout, lang)}
             </Button>
-          </div>
-        </div>
-      </header>
+          </>
+        }
+      />
 
       <div className="flex-1 overflow-y-auto">
         <div className="container mx-auto max-w-2xl px-4 py-8">

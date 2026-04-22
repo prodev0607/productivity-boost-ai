@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { translations, t } from "@/i18n/translations";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { AppHeader } from "@/components/AppHeader";
 
 const benefitIcons = [Clock, Brain, Zap];
 
@@ -23,22 +24,18 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Nav */}
-      <nav className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto flex items-center justify-between h-16 px-4">
-          <span className="font-heading text-xl font-bold text-foreground">
-            B-<span className="text-primary">TECH</span>
-          </span>
-          <div className="flex items-center gap-2">
+      <AppHeader
+        className="sticky top-0 z-50"
+        rightSlot={
+          <>
             <LanguageToggle />
             <Button variant="ghost" onClick={() => navigate("/login")}>
               {t(tx.nav.login, lang)}
             </Button>
-            <Button onClick={() => navigate("/login")}>
-              {t(tx.nav.start, lang)}
-            </Button>
-          </div>
-        </div>
-      </nav>
+            <Button onClick={() => navigate("/login")}>{t(tx.nav.start, lang)}</Button>
+          </>
+        }
+      />
 
       {/* Hero */}
       <section className="container mx-auto px-4 pt-20 pb-16 text-center">
