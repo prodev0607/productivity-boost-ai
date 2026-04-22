@@ -2,17 +2,19 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Check, Zap, Clock, Brain, ArrowRight, Star } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { translations, t } from "@/i18n/translations";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { AppHeader } from "@/components/AppHeader";
+import { toast } from "sonner";
 
 const benefitIcons = [Clock, Brain, Zap];
 
 const Index = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const { lang } = useLanguage();
   const tx = translations;
 
@@ -20,6 +22,40 @@ const Index = () => {
     const ref = searchParams.get("ref");
     if (ref) localStorage.setItem("affiliate_ref", ref);
   }, [searchParams]);
+
+  useEffect(() => {
+    const checkout = searchParams.get("checkout");
+    if (checkout === "cancelled") {
+      toast.info(lang === "fr" ? "Paiement annule." : "Checkout cancelled.");
+    }
+  }, [lang, searchParams]);
+
+  const handleStartCheckout = async () => {
+    if (isCheckoutLoading) return;
+
+    try {
+      setIsCheckoutLoading(true);
+      const response = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          affiliateRef: localStorage.getItem("affiliate_ref") || "",
+        }),
+      });
+
+      const payload = (await response.json().catch(() => ({}))) as { url?: string; error?: string };
+      if (!response.ok || !payload.url) {
+        throw new Error(payload.error || "Unable to start Stripe checkout.");
+      }
+
+      window.location.assign(payload.url);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Payment setup failed.";
+      toast.error(lang === "fr" ? `Echec du paiement: ${message}` : `Payment setup failed: ${message}`);
+    } finally {
+      setIsCheckoutLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -107,8 +143,8 @@ const Index = () => {
                   </li>
                 ))}
               </ul>
-              <Button className="w-full mt-8 h-12 text-base" onClick={() => navigate("/login")}>
-                {t(tx.pricing.cta, lang)}
+              <Button className="w-full mt-8 h-12 text-base" onClick={() => void handleStartCheckout()} disabled={isCheckoutLoading}>
+                {isCheckoutLoading ? (lang === "fr" ? "Redirection..." : "Redirecting...") : t(tx.pricing.cta, lang)}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               <p className="text-center text-xs text-muted-foreground mt-3">{t(tx.pricing.cancel, lang)}</p>

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,9 +10,11 @@ import { translations, t } from "@/i18n/translations";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { buildProfileFromAnswers, saveOnboardingProfile } from "@/lib/onboardingProfile";
 import { AppHeader } from "@/components/AppHeader";
+import { toast } from "sonner";
 
 const Onboarding = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const { lang } = useLanguage();
@@ -22,6 +24,12 @@ const Onboarding = () => {
   const step = steps[currentStep];
   const progress = ((currentStep + 1) / steps.length) * 100;
   const isLast = currentStep === steps.length - 1;
+
+  useEffect(() => {
+    if (searchParams.get("checkout") === "success") {
+      toast.success(lang === "fr" ? "Paiement confirme. Bienvenue !" : "Payment confirmed. Welcome!");
+    }
+  }, [lang, searchParams]);
 
   const handleSelect = (value: string) => {
     setAnswers({ ...answers, [currentStep]: value });
