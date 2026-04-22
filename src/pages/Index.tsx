@@ -68,7 +68,9 @@ const Index = () => {
             <Button variant="ghost" onClick={() => navigate("/login")}>
               {t(tx.nav.login, lang)}
             </Button>
-            <Button onClick={() => navigate("/login")}>{t(tx.nav.start, lang)}</Button>
+            <Button onClick={() => void handleStartCheckout()} disabled={isCheckoutLoading}>
+              {isCheckoutLoading ? (lang === "fr" ? "Redirection..." : "Redirecting...") : t(tx.nav.start, lang)}
+            </Button>
           </>
         }
       />
@@ -87,8 +89,8 @@ const Index = () => {
           {t(tx.hero.subtitle, lang)}
         </p>
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Button size="lg" className="text-base px-8 h-12" onClick={() => navigate("/login")}>
-            {t(tx.hero.cta, lang)}
+          <Button size="lg" className="text-base px-8 h-12" onClick={() => void handleStartCheckout()} disabled={isCheckoutLoading}>
+            {isCheckoutLoading ? (lang === "fr" ? "Redirection..." : "Redirecting...") : t(tx.hero.cta, lang)}
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
           <p className="text-sm text-muted-foreground">{t(tx.hero.ctaSub, lang)}</p>
