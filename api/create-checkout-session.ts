@@ -35,7 +35,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
           price_data: {
             currency: "usd",
             recurring: { interval: "month" },
-            unit_amount: 900,
+            unit_amount: 3900,
             product_data: {
               name: "Productivity Boost AI Pro",
               description: "AI-powered productivity planning assistant",
